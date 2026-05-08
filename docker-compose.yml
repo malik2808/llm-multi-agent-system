@@ -1,0 +1,55 @@
+services:
+  api:
+    build: .
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://${POSTGRES_USER:-llm_agents}@db:5432/${POSTGRES_DB:-llm_agents}}
+      AGENT_RANDOM_SEED: ${AGENT_RANDOM_SEED:-7}
+      WORKER_POLL_SECONDS: ${WORKER_POLL_SECONDS:-1}
+    ports:
+      - "${API_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  worker:
+    build: .
+    command: python -m app.worker
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://${POSTGRES_USER:-llm_agents}@db:5432/${POSTGRES_DB:-llm_agents}}
+      AGENT_RANDOM_SEED: ${AGENT_RANDOM_SEED:-7}
+      WORKER_POLL_SECONDS: ${WORKER_POLL_SECONDS:-1}
+      RUN_EVAL_ON_START: ${RUN_EVAL_ON_START:-true}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-llm_agents}
+      POSTGRES_DB: ${POSTGRES_DB:-llm_agents}
+      POSTGRES_HOST_AUTH_METHOD: ${POSTGRES_HOST_AUTH_METHOD:-trust}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-llm_agents} -d ${POSTGRES_DB:-llm_agents}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  logs:
+    image: adminer:4
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+    ports:
+      - "${LOG_UI_PORT:-8080}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+
