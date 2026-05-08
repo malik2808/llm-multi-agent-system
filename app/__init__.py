@@ -1,0 +1,2 @@
+"""Assessment multi-agent system."""
+

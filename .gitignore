@@ -11,4 +11,4 @@ data/
 .env
 .coverage
 htmlcov/
-
+*.egg-info/
