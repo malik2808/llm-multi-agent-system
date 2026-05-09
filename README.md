@@ -214,6 +214,16 @@ This approach prioritizes:
 - Token counting is approximate and intentionally conservative.
 - The NL-to-SQL translator supports a safe, small grammar over the seeded fact table.
 
+## AI Assistance Disclosure
+
+AI-assisted development tools, primarily OpenAI Codex and ChatGPT, were used during implementation to accelerate scaffolding, boilerplate generation, architecture iteration, debugging assistance, and documentation refinement.
+
+All generated code and documentation were manually reviewed, executed, validated, and iteratively refined before submission. The orchestration flow, shared context system, critique pipeline, provenance tracking, evaluation harness, retry/fallback middleware, and overall architecture were studied and verified end-to-end during development.
+
+The final repository structure, execution verification, debugging process, architecture understanding, documentation decisions, and submission preparation reflect my own review and understanding of the system.
+
+This disclosure is included intentionally to align with the assessment requirement permitting AI-assisted development with transparent attestation.
+
 ## What I Would Build Next
 
 - Add real model adapters behind the agent interfaces with JSON schema validation and retryable parse repair.
