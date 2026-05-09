@@ -1,4 +1,4 @@
-# LLM Engineer Take-Home Assessment
+# Real-Time Multi-Agent LLM Orchestration and Evaluation System
 
 This repository implements a containerized multi-agent system with dynamic routing, tool failure contracts, context budget enforcement, an evaluation harness, prompt rewrite approvals, SSE streaming, and queryable execution traces.
 
@@ -43,6 +43,26 @@ Request:
 ```json
 {"query": "What is the capital of France?"}
 ```
+### Example SSE Stream
+
+```text
+event: routing_decision
+data: {"next_agent":"retrieval","reason":"dependency resolved"}
+
+event: agent_started
+data: {"agent_id":"retrieval","budget_remaining":1200}
+
+event: tool_call
+data: {"tool_name":"web_search_stub","attempt":1,"accepted":true}
+
+event: agent_completed
+data: {"agent_id":"retrieval","token_count":148}
+
+event: job_completed
+data: {"final_answer":"The capital of France is Paris."}
+```
+
+The `/query` endpoint streams structured execution events in real time, allowing reviewers to inspect orchestration behavior, routing decisions, tool execution, retries, critique flow, and final synthesis as the job progresses.
 
 ### `GET /trace/{job_id}`
 
@@ -75,6 +95,51 @@ All error responses use:
 See [docs/architecture.md](docs/architecture.md) for the text diagram.
 
 The orchestrator is the only component that invokes agents. Agents never call each other. All handoffs go through `SharedContext`, which carries the task graph, tool results, agent outputs, critique spans, routing decisions, final answer, and sentence-level provenance.
+
+## End-to-End Flow
+
+```text
+1. User submits query
+        ↓
+2. FastAPI API receives request
+        ↓
+3. API creates Job in PostgreSQL
+        ↓
+4. Worker picks queued job
+        ↓
+5. Orchestrator initializes SharedContext
+        ↓
+6. Decomposition Agent creates tasks + dependencies
+        ↓
+7. Retrieval Agent gathers evidence using ToolExecutor
+        ↓
+8. ToolExecutor manages:
+      - web search
+      - structured lookup
+      - code sandbox
+      - retries/fallbacks
+        ↓
+9. Critique Agent validates claims
+      - detects contradictions
+      - checks grounding
+      - flags unsafe spans
+        ↓
+10. Synthesis Agent assembles only approved claims
+        ↓
+11. Final answer + provenance map generated
+        ↓
+12. SSE events streamed back to client
+        ↓
+13. Eval Harness scores:
+      - correctness
+      - grounding
+      - efficiency
+      - robustness
+        ↓
+14. Meta-Agent proposes prompt rewrites
+        ↓
+15. Human approves/rejects rewrites
+```
 
 ## Agents
 
@@ -120,6 +185,26 @@ Every eval run stores exact prompts, tool calls, outputs, scores, timestamps, an
 The local corpus is seeded into `knowledge_chunks` and `structured_facts`. Agents can retrieve from those tables, but eval expectations are only used after a job completes inside scoring code. Prompt rewrites are proposed from failure summaries and require human approval before affecting future runs.
 
 The baseline is a deterministic retrieval-and-lookup system. The extra orchestration complexity is only used where the task requires it: ambiguous decomposition, span-level critique, context-budget policy, and auditable prompt improvement.
+
+## Why Deterministic Instead of Real LLM APIs?
+
+The system intentionally uses deterministic agent behavior instead of external LLM APIs so the project can be:
+
+- reproducible across runs
+- executable without paid API credentials
+- diff-able during evaluation reruns
+- inspectable during orchestration and critique analysis
+- runnable in a few minutes by reviewers
+
+The project focuses on production-style architecture boundaries rather than model capability itself.  
+The orchestration layer, shared context system, tool middleware, critique pipeline, provenance tracking, evaluation harness, and prompt-governance workflow are designed so real LLM adapters can be integrated later without changing the overall system architecture.
+
+This approach prioritizes:
+- observability
+- reproducibility
+- deterministic evaluation
+- debugging transparency
+- architectural clarity
 
 ## Known Limitations
 
