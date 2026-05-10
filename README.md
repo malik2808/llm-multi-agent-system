@@ -43,6 +43,25 @@ Request:
 ```json
 {"query": "What is the capital of France?"}
 ```
+### Example Request (curl)
+
+```bash
+curl -N -X POST http://localhost:8000/query \
+-H "Content-Type: application/json" \
+-d '{"query":"What is the capital of France?"}'
+```
+
+> Windows PowerShell users may need to use `curl.exe` instead of `curl`.
+
+### PowerShell Example (Windows)
+
+```powershell
+Invoke-RestMethod -Method POST `
+  -Uri "http://localhost:8000/query" `
+  -ContentType "application/json" `
+  -Body '{"query":"What is the capital of France?"}'
+```
+
 ### Example SSE Stream
 
 ```text
@@ -92,7 +111,9 @@ All error responses use:
 
 ## Architecture
 
-See [docs/architecture.md](docs/architecture.md) for the text diagram.
+![Architecture Diagram](docs/architecture.png)
+
+See [docs/architecture.md](docs/architecture.md) for the detailed Mermaid flow diagram.
 
 The orchestrator is the only component that invokes agents. Agents never call each other. All handoffs go through `SharedContext`, which carries the task graph, tool results, agent outputs, critique spans, routing decisions, final answer, and sentence-level provenance.
 
@@ -208,7 +229,7 @@ This approach prioritizes:
 
 ## Known Limitations
 
-- The "LLM" behavior is deterministic and rule-based so the assessment runs without paid model credentials. Swapping in a real model would keep the same agent, tool, context, and logging boundaries.
+- Agent reasoning behavior is deterministic and rule-based so the assessment runs without paid model credentials. Swapping in a real model would keep the same agent, tool, context, and logging boundaries.
 - The Python sandbox uses process isolation and static checks, not a hardened container-per-call jail.
 - The search tool is a structured local stub, not internet search.
 - Token counting is approximate and intentionally conservative.
