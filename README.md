@@ -2,7 +2,7 @@
 
 This repository implements a containerized multi-agent system with dynamic routing, tool failure contracts, context budget enforcement, an evaluation harness, prompt rewrite approvals, SSE streaming, and queryable execution traces.
 
-The implementation is intentionally deterministic: no external LLM key is required, so a reviewer can run it in a few minutes and diff eval output across runs. The agent interfaces, context discipline, logging, and prompt-improvement workflow mirror a production LLM system while keeping the model behavior inspectable.
+The implementation is intentionally deterministic: no external LLM key is required. The agent interfaces, context discipline, logging, and prompt-improvement workflow mirror a production LLM system while keeping the model behavior inspectable.
 
 ## Quick Start
 
